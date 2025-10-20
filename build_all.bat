@@ -9,6 +9,8 @@ where cmake >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: CMake not found! Please install CMake first.
     echo Download from: https://cmake.org/download/
+    echo.
+    echo For detailed instructions, see: INSTALL_BUILD_TOOLS.md
     pause
     exit /b 1
 )
@@ -17,8 +19,22 @@ REM Check if Visual Studio is installed
 where cl >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Visual Studio compiler not found!
-    echo Please run this from Visual Studio Developer Command Prompt
-    echo Or install Visual Studio Build Tools
+    echo.
+    echo You need to install Visual Studio or Build Tools.
+    echo.
+    echo QUICK FIX:
+    echo   1. Open "Developer Command Prompt for VS 2022"
+    echo      - Press Windows key
+    echo      - Type "developer command"
+    echo      - Click the result
+    echo   2. Navigate to this folder
+    echo   3. Run build_all.bat again
+    echo.
+    echo OR INSTALL:
+    echo   1. See INSTALL_BUILD_TOOLS.md for detailed instructions
+    echo   2. Download Visual Studio Community 2022 (FREE^)
+    echo   3. Select "Desktop development with C++" during install
+    echo.
     pause
     exit /b 1
 )

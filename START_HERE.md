@@ -59,21 +59,40 @@ You've just received a **complete, production-ready Rocket League TAS mod** with
 
 ---
 
-## ⚡ Super Quick Start (3 Steps)
+## ⚡ Super Quick Start
 
-### Step 1: Get Dependencies
+### ❓ Got a Build Error?
+→ Read **[EASY_BUILD_GUIDE.md](EASY_BUILD_GUIDE.md)** or **[INSTALL_BUILD_TOOLS.md](INSTALL_BUILD_TOOLS.md)**
+
+### ✅ For First-Time Setup:
+
+**Step 0: Check Your Environment (Recommended)**
+```bash
+check_build_env.bat
+```
+This checks if you have everything installed.
+
+**Step 1: Get Dependencies**
 ```bash
 setup_dependencies.bat
 ```
 This helps you download ImGui and MinHook.
 
-### Step 2: Build
-```bash
-build_all.bat
-```
-Creates `RLTASMod.dll` and `RLTASInjector.exe`.
+**Step 2: Build**
 
-### Step 3: Use
+**Option A: Using Developer Command Prompt**
+1. Press Windows Key → Type "developer command"
+2. Click "Developer Command Prompt for VS 2022"
+3. Navigate to project folder: `cd C:\path\to\project`
+4. Run: `build_all.bat`
+
+**Option B: Using Visual Studio**
+1. Open Visual Studio
+2. File → Open → CMake
+3. Select `CMakeLists.txt`
+4. Build → Build All
+
+**Step 3: Use**
 1. Start Rocket League
 2. Run `RLTASInjector.exe` as Admin
 3. Press **F9** in-game
