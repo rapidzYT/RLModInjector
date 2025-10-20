@@ -3,6 +3,7 @@
 #include "InputReplayer.h"
 #include "MemoryManager.h"
 #include "TASData.h"
+#include <Windows.h>
 #include <filesystem>
 #include <chrono>
 #include <fstream>

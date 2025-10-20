@@ -26,6 +26,7 @@ private:
     bool HookPresent();
     void UnhookPresent();
     
+public:
     static void InitializeImGui(IDXGISwapChain* pSwapChain);
     static void ShutdownImGui();
     static void RenderImGui();
@@ -35,6 +36,8 @@ private:
     static ID3D11Device* s_Device;
     static ID3D11DeviceContext* s_Context;
     static ID3D11RenderTargetView* s_MainRenderTargetView;
+    
+private:
     
     typedef HRESULT(__stdcall* PresentFn)(IDXGISwapChain*, UINT, UINT);
     typedef HRESULT(__stdcall* ResizeBuffersFn)(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
