@@ -61,6 +61,14 @@ You've just received a **complete, production-ready Rocket League TAS mod** with
 
 ## ⚡ Super Quick Start
 
+### 🎉 EASIER OPTION: Use the C# Version!
+→ Read **[BUILD_CSHARP_VERSION.md](BUILD_CSHARP_VERSION.md)**
+- Just open `RocketLeagueTAS.sln` in Visual Studio
+- Press Ctrl+Shift+B to build
+- Much simpler! (No CMake, no dependencies)
+
+### 💪 ADVANCED OPTION: Build C++ Version (In-game F9 overlay)
+
 ### ❓ Got a Build Error?
 → Read **[EASY_BUILD_GUIDE.md](EASY_BUILD_GUIDE.md)** or **[INSTALL_BUILD_TOOLS.md](INSTALL_BUILD_TOOLS.md)**
 
