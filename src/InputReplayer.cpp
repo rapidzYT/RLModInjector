@@ -40,6 +40,12 @@ InputFrame* InputReplayer::GetCurrentFrame() {
     
     float elapsedTime = (currentTime - replayStartTime) * replaySpeed;
     
+    // Make sure we have frames
+    if (currentTAS->GetFrameCount() == 0) {
+        StopReplay();
+        return nullptr;
+    }
+    
     // Find the frame that should be playing at this time
     while (currentFrameIndex < currentTAS->GetFrameCount()) {
         auto frame = currentTAS->GetFrame(currentFrameIndex);
@@ -55,7 +61,12 @@ InputFrame* InputReplayer::GetCurrentFrame() {
         }
     }
     
-    return currentTAS->GetFrame(currentFrameIndex);
+    // Return current frame if within bounds
+    if (currentFrameIndex < currentTAS->GetFrameCount()) {
+        return currentTAS->GetFrame(currentFrameIndex);
+    }
+    
+    return nullptr;
 }
 
 float InputReplayer::GetProgress() const {

@@ -208,12 +208,17 @@ void TASMod::RenderControlsTab() {
     ImGui::Spacing();
     
     // Update button (only available after recording)
-    ImGui::BeginDisabled(currentState != STATE_IDLE || !currentTAS || currentTAS->GetFrameCount() == 0);
+    bool canUpdate = (currentState == STATE_IDLE && recorder && recorder->GetFrameCount() > 0);
+    ImGui::BeginDisabled(!canUpdate);
     if (ImGui::Button("Update", ImVec2(120, 40))) {
         UpdateTAS();
     }
     ImGui::SameLine();
-    ImGui::Text("Save the last recording to the current TAS");
+    if (canUpdate) {
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Click to save %d frames to TAS", recorder ? recorder->GetFrameCount() : 0);
+    } else {
+        ImGui::Text("Record something first, then Update to save it");
+    }
     ImGui::EndDisabled();
 }
 
@@ -248,8 +253,18 @@ void TASMod::RenderLoadedTASTab() {
     
     if (!currentTASName.empty() && currentTAS) {
         ImGui::Text("TAS Name: %s", currentTASName.c_str());
-        ImGui::Text("Total Frames: %d", currentTAS->GetFrameCount());
-        ImGui::Text("Duration: %.2f seconds", currentTAS->GetDuration());
+        
+        int frameCount = currentTAS->GetFrameCount();
+        float duration = currentTAS->GetDuration();
+        
+        ImGui::Text("Total Frames: %d", frameCount);
+        ImGui::Text("Duration: %.2f seconds", duration);
+        
+        // Show recorder info too
+        if (recorder) {
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Recorder Buffer: %d frames (not saved yet)", recorder->GetFrameCount());
+        }
         
         ImGui::Spacing();
         ImGui::Separator();
@@ -379,6 +394,9 @@ void TASMod::StartReplaying() {
         return;
     }
     
+    // Make sure replayer exists
+    if (!replayer) return;
+    
     // Restore initial state
     RestoreInitialState();
     
@@ -403,10 +421,9 @@ void TASMod::UpdateTAS() {
     
     if (frames.size() > 0) {
         currentTAS->AppendFrames(frames);
-        // Show success message in console or keep for debugging
+        // Clear the recorder so we can record again
+        recorder->Clear();
     }
-    
-    recorder->Clear();
 }
 
 void TASMod::SaveTAS() {
