@@ -63,12 +63,14 @@ void TASMod::OnFrame() {
         // Record inputs every frame
         ProcessInput();
     } else if (currentState == STATE_REPLAYING) {
+        if (!replayer || !memory) return;
+        
         auto frame = replayer->GetCurrentFrame();
         if (frame) {
-            // Apply inputs
+            // Apply inputs to the game
             memory->ApplyInputs(*frame);
             
-            // Check for break inputs
+            // Check for break inputs (user taking over)
             if (CheckBreakInputs(*frame)) {
                 StopReplaying();
                 StartRecording();

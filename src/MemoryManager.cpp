@@ -1,4 +1,5 @@
 #include "MemoryManager.h"
+#include "TASMod.h"
 #include <TlHelp32.h>
 
 namespace RLTASMod {
@@ -78,9 +79,33 @@ bool MemoryManager::SetGameState(const GameState& state) {
 }
 
 bool MemoryManager::ApplyInputs(const InputFrame& frame) {
-    // This would use DirectInput or similar to inject inputs
-    // For now, this is a placeholder
-    // In a real implementation, you'd hook into the game's input processing
+    // Simulate keyboard inputs using Windows API
+    const int KEYEVENTF_KEYUP = 0x0002;
+    
+    // Helper to press or release a key
+    auto SetKeyState = [](int vk, bool pressed) {
+        if (pressed) {
+            keybd_event(vk, 0, 0, 0);  // Key down
+        } else {
+            keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);  // Key up
+        }
+    };
+    
+    // Apply all inputs
+    SetKeyState('W', frame.throttle);
+    SetKeyState('S', frame.brake);
+    SetKeyState('A', frame.steerLeft);
+    SetKeyState('D', frame.steerRight);
+    SetKeyState(VK_SPACE, frame.jump);
+    SetKeyState(VK_SHIFT, frame.boost);
+    SetKeyState(VK_CONTROL, frame.powerslide);
+    SetKeyState('Q', frame.airRollLeft);
+    SetKeyState('E', frame.airRollRight);
+    SetKeyState(VK_UP, frame.pitch > 0.5f);
+    SetKeyState(VK_DOWN, frame.pitch < -0.5f);
+    SetKeyState(VK_LEFT, frame.yaw < -0.5f);
+    SetKeyState(VK_RIGHT, frame.yaw > 0.5f);
+    
     return true;
 }
 

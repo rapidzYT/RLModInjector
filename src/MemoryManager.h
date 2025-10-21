@@ -1,7 +1,11 @@
 #pragma once
 
-#include "TASMod.h"
 #include <Windows.h>
+
+namespace RLTASMod {
+    struct InputFrame;
+    struct GameState;
+}
 
 namespace RLTASMod {
 
