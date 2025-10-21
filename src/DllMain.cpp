@@ -39,7 +39,9 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
     // Set render callback
     g_D3D11Hook->SetRenderCallback([](IDXGISwapChain* swapChain) {
         if (g_TASMod) {
+            // Call OnFrame every frame to handle recording/replay
             g_TASMod->OnFrame();
+            // Render the GUI
             g_TASMod->RenderGUI();
         }
     });

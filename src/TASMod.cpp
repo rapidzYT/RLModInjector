@@ -60,6 +60,7 @@ void TASMod::OnFrame() {
     
     // Process TAS operations
     if (currentState == STATE_RECORDING) {
+        // Record inputs every frame
         ProcessInput();
     } else if (currentState == STATE_REPLAYING) {
         auto frame = replayer->GetCurrentFrame();
@@ -190,6 +191,10 @@ void TASMod::RenderControlsTab() {
         }
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "RECORDING...");
+        // Show frame count while recording
+        if (recorder) {
+            ImGui::Text("Frames recorded: %d", recorder->GetFrameCount());
+        }
     } else if (currentState == STATE_REPLAYING) {
         if (ImGui::Button("Stop Replaying", ImVec2(120, 40))) {
             StopReplaying();
@@ -391,11 +396,15 @@ void TASMod::StopReplaying() {
 }
 
 void TASMod::UpdateTAS() {
-    if (!currentTAS) return;
+    if (!currentTAS || !recorder) return;
     
     // Get recorded frames and add them to the current TAS
     auto frames = recorder->GetRecordedFrames();
-    currentTAS->AppendFrames(frames);
+    
+    if (frames.size() > 0) {
+        currentTAS->AppendFrames(frames);
+        // Show success message in console or keep for debugging
+    }
     
     recorder->Clear();
 }
@@ -454,6 +463,8 @@ bool TASMod::CheckBreakInputs(const InputFrame& frame) {
 }
 
 void TASMod::ProcessInput() {
+    if (!recorder) return;
+    
     InputFrame frame;
     frame.timestamp = (GetCurrentTime() - recordingStartTime) / settings.recordSpeed;
     
@@ -473,6 +484,7 @@ void TASMod::ProcessInput() {
     frame.yaw = IsKeyPressed(VK_LEFT) ? -1.0f : (IsKeyPressed(VK_RIGHT) ? 1.0f : 0.0f);
     frame.roll = 0.0f;
     
+    // Actually record the frame
     recorder->RecordFrame(frame);
 }
 
