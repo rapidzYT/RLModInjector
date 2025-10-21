@@ -35,9 +35,8 @@ bool TASMod::Initialize() {
     }
     
     // Initialize virtual controller (for input replay)
-    virtualController->Initialize();
-    // Note: We don't fail if virtual controller init fails,
-    // it will just show a warning message to the user
+    // DISABLED - Not working, use keybd_event fallback instead
+    // virtualController->Initialize();
     
     // Initialize item manager
     itemManager->Initialize();
@@ -79,12 +78,8 @@ void TASMod::OnFrame() {
         
         auto frame = replayer->GetCurrentFrame();
         if (frame) {
-            // Apply inputs to the game via virtual controller (preferred)
-            if (virtualController && virtualController->IsInitialized()) {
-                virtualController->ApplyInputs(*frame);
-            }
-            // Fallback to memory-based input (won't work well but better than nothing)
-            else if (memory) {
+            // Apply inputs using keybd_event (simple method)
+            if (memory) {
                 memory->ApplyInputs(*frame);
             }
             
