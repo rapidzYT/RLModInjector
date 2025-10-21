@@ -27,7 +27,24 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
     // Initialize D3D11 hook for rendering
     g_D3D11Hook = new D3D11Hook();
     if (!g_D3D11Hook->Initialize()) {
-        MessageBoxA(NULL, "Failed to initialize D3D11 Hook", "Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, 
+            "Failed to initialize D3D11 Hook!\n\n"
+            "Possible solutions:\n"
+            "1. Make sure Rocket League is using DirectX 11\n"
+            "   (Check Video Settings in RL)\n"
+            "2. Try restarting Rocket League\n"
+            "3. Inject after the main menu loads\n"
+            "4. Check if anti-cheat is blocking\n\n"
+            "The GUI won't work, but recording might still function.",
+            "D3D11 Hook Failed", 
+            MB_OK | MB_ICONWARNING);
+        
+        // Continue without GUI (recording can still work)
+        g_Running = true;
+        while (g_Running) {
+            Sleep(100);
+        }
+        
         g_TASMod->Shutdown();
         delete g_TASMod;
         delete g_D3D11Hook;

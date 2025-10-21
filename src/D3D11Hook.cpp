@@ -60,11 +60,13 @@ void D3D11Hook::SetRenderCallback(std::function<void(IDXGISwapChain*)> callback)
 }
 
 bool D3D11Hook::HookPresent() {
-    // Create a temporary swap chain to get the vtable
+    // Try to create a temporary swap chain to get the vtable
     D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     swapChainDesc.BufferCount = 1;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.BufferDesc.Width = 800;
+    swapChainDesc.BufferDesc.Height = 600;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.OutputWindow = GetForegroundWindow();
     swapChainDesc.SampleDesc.Count = 1;
@@ -77,8 +79,21 @@ bool D3D11Hook::HookPresent() {
     ID3D11Device* pDevice = nullptr;
     ID3D11DeviceContext* pContext = nullptr;
     
-    if (FAILED(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1,
-        D3D11_SDK_VERSION, &swapChainDesc, &pSwapChain, &pDevice, NULL, &pContext))) {
+    // Try to create device - if this fails, RL might not be using D3D11
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1,
+        D3D11_SDK_VERSION, &swapChainDesc, &pSwapChain, &pDevice, NULL, &pContext);
+    
+    if (FAILED(hr)) {
+        // Try without swap chain
+        hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1,
+            D3D11_SDK_VERSION, &pDevice, NULL, &pContext);
+        if (FAILED(hr)) {
+            MessageBoxA(NULL, "Failed to create D3D11 device.\n\nRocket League might not be using DirectX 11.\n\nTry setting your game to DX11 mode in video settings.", "D3D11 Hook Error", MB_OK | MB_ICONERROR);
+            return false;
+        }
+        // Can't hook without swap chain, but at least we know D3D11 is available
+        if (pDevice) pDevice->Release();
+        if (pContext) pContext->Release();
         return false;
     }
     
@@ -87,6 +102,7 @@ bool D3D11Hook::HookPresent() {
     
     // Hook Present (index 8)
     if (MH_CreateHook(pVTable[8], &PresentHook, reinterpret_cast<LPVOID*>(&s_OriginalPresent)) != MH_OK) {
+        MessageBoxA(NULL, "Failed to hook Present function.\n\nThis might be a DirectX version issue.", "Hook Error", MB_OK | MB_ICONERROR);
         pSwapChain->Release();
         pDevice->Release();
         pContext->Release();
@@ -95,6 +111,7 @@ bool D3D11Hook::HookPresent() {
     
     // Hook ResizeBuffers (index 13)
     if (MH_CreateHook(pVTable[13], &ResizeBuffersHook, reinterpret_cast<LPVOID*>(&s_OriginalResizeBuffers)) != MH_OK) {
+        MessageBoxA(NULL, "Failed to hook ResizeBuffers function.", "Hook Error", MB_OK | MB_ICONERROR);
         pSwapChain->Release();
         pDevice->Release();
         pContext->Release();
@@ -102,8 +119,13 @@ bool D3D11Hook::HookPresent() {
     }
     
     // Enable hooks
-    MH_EnableHook(pVTable[8]);
-    MH_EnableHook(pVTable[13]);
+    if (MH_EnableHook(pVTable[8]) != MH_OK || MH_EnableHook(pVTable[13]) != MH_OK) {
+        MessageBoxA(NULL, "Failed to enable hooks.", "Hook Error", MB_OK | MB_ICONERROR);
+        pSwapChain->Release();
+        pDevice->Release();
+        pContext->Release();
+        return false;
+    }
     
     pSwapChain->Release();
     pDevice->Release();
