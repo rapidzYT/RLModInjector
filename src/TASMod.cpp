@@ -3,6 +3,7 @@
 #include "InputReplayer.h"
 #include "MemoryManager.h"
 #include "VirtualController.h"
+#include "ItemManager.h"
 #include "TASData.h"
 #include <Windows.h>
 #include <filesystem>
@@ -18,6 +19,7 @@ TASMod::TASMod() {
     replayer = std::make_unique<InputReplayer>();
     memory = std::make_unique<MemoryManager>();
     virtualController = std::make_unique<VirtualController>();
+    itemManager = std::make_unique<ItemManager>();
 }
 
 TASMod::~TASMod() {
@@ -36,6 +38,9 @@ bool TASMod::Initialize() {
     virtualController->Initialize();
     // Note: We don't fail if virtual controller init fails,
     // it will just show a warning message to the user
+    
+    // Initialize item manager
+    itemManager->Initialize();
     
     // Create TAS directory if it doesn't exist
     fs::create_directories("TAS");
@@ -356,6 +361,150 @@ void TASMod::RenderFilesTab() {
         
         ImGui::EndDisabled();
     }
+}
+
+void TASMod::RenderItemsTab() {
+    ImGui::Spacing();
+    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Item Spawner");
+    ImGui::Separator();
+    ImGui::Spacing();
+    
+    // Quick unlock buttons
+    ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Quick Unlock:");
+    
+    if (ImGui::Button("Unlock All Items", ImVec2(150, 30))) {
+        if (itemManager) {
+            itemManager->UnlockAllItems();
+            MessageBoxA(NULL, "All items unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("Unlock All Cars", ImVec2(150, 30))) {
+        if (itemManager) {
+            itemManager->UnlockAllBodies();
+            MessageBoxA(NULL, "All car bodies unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("Unlock All Wheels", ImVec2(150, 30))) {
+        if (itemManager) {
+            itemManager->UnlockAllWheels();
+            MessageBoxA(NULL, "All wheels unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    
+    if (ImGui::Button("Unlock All Boosts", ImVec2(150, 30))) {
+        if (itemManager) {
+            itemManager->UnlockAllBoosts();
+            MessageBoxA(NULL, "All boosts unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("Unlock All Goal Explosions", ImVec2(200, 30))) {
+        if (itemManager) {
+            itemManager->UnlockAllGoalExplosions();
+            MessageBoxA(NULL, "All goal explosions unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    
+    if (ImGui::Button("Unlock Champion Series (CS)", ImVec2(200, 30))) {
+        if (itemManager) {
+            itemManager->UnlockChampionSeries();
+            MessageBoxA(NULL, "Champion Series items unlocked!", "Success", MB_OK | MB_ICONINFORMATION);
+        }
+    }
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    
+    // Item filter tabs
+    static int selectedCategory = 0;
+    const char* categories[] = {"All", "Cars", "Wheels", "Boosts", "Goal Explosions", "Decals"};
+    
+    ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Filter by Category:");
+    ImGui::Combo("##Category", &selectedCategory, categories, IM_ARRAYSIZE(categories));
+    
+    ImGui::Spacing();
+    
+    // Search box
+    static char searchBuffer[256] = "";
+    ImGui::Text("Search:");
+    ImGui::SameLine();
+    ImGui::InputText("##ItemSearch", searchBuffer, 256);
+    
+    ImGui::Spacing();
+    
+    // Item list
+    ImGui::BeginChild("ItemList", ImVec2(0, 300), true);
+    
+    if (itemManager) {
+        std::vector<Item> itemsToShow;
+        
+        // Get items based on selected category
+        if (selectedCategory == 0) {
+            // All items
+            itemsToShow = itemManager->GetAllItems();
+        } else if (selectedCategory == 1) {
+            // Cars
+            itemsToShow = itemManager->GetItemsByType(ItemType::BODY);
+        } else if (selectedCategory == 2) {
+            // Wheels
+            itemsToShow = itemManager->GetItemsByType(ItemType::WHEELS);
+        } else if (selectedCategory == 3) {
+            // Boosts
+            itemsToShow = itemManager->GetItemsByType(ItemType::BOOST);
+        } else if (selectedCategory == 4) {
+            // Goal Explosions
+            itemsToShow = itemManager->GetItemsByType(ItemType::GOAL_EXPLOSION);
+        } else if (selectedCategory == 5) {
+            // Decals
+            itemsToShow = itemManager->GetItemsByType(ItemType::DECAL);
+        }
+        
+        // Apply search filter
+        if (strlen(searchBuffer) > 0) {
+            itemsToShow = itemManager->SearchItems(std::string(searchBuffer));
+        }
+        
+        // Display items
+        for (const auto& item : itemsToShow) {
+            ImGui::PushID(item.id);
+            
+            // Item name with color based on unlock status
+            if (item.isUnlocked) {
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "[UNLOCKED]");
+            } else {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[LOCKED]");
+            }
+            ImGui::SameLine();
+            ImGui::Text("%s (%s)", item.name.c_str(), GetItemTypeName(item.type));
+            ImGui::SameLine(400);
+            
+            if (ImGui::Button("Unlock")) {
+                itemManager->UnlockItem(item.id);
+            }
+            
+            ImGui::PopID();
+        }
+    }
+    
+    ImGui::EndChild();
+    
+    ImGui::Spacing();
+    
+    // Info message
+    ImGui::Separator();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Note:");
+    ImGui::TextWrapped("Item spawning requires memory addresses to be configured. "
+                      "Items will show as unlocked in this GUI, but may not appear in-game "
+                      "until memory addresses are found with Cheat Engine.");
+    ImGui::Spacing();
+    ImGui::TextWrapped("This feature is CLIENT-SIDE ONLY and will not give you items in online mode. "
+                      "It's for Freeplay/Custom Games only!");
 }
 
 void TASMod::NewTAS(const std::string& name) {

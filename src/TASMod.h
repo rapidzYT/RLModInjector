@@ -41,6 +41,7 @@ class InputRecorder;
 class InputReplayer;
 class MemoryManager;
 class VirtualController;
+class ItemManager;
 struct TASData;
 
 // Input state structure
@@ -126,6 +127,7 @@ private:
     std::unique_ptr<InputReplayer> replayer;
     std::unique_ptr<MemoryManager> memory;
     std::unique_ptr<VirtualController> virtualController;
+    std::unique_ptr<ItemManager> itemManager;
     
     GameState initialState;
     float recordingStartTime = 0.0f;
@@ -140,6 +142,7 @@ private:
     void RenderSettingsTab();
     void RenderLoadedTASTab();
     void RenderFilesTab();
+    void RenderItemsTab();
     
     // TAS operations
     void NewTAS(const std::string& name);
