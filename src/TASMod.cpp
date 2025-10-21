@@ -2,6 +2,7 @@
 #include "InputRecorder.h"
 #include "InputReplayer.h"
 #include "MemoryManager.h"
+#include "VirtualController.h"
 #include "TASData.h"
 #include <Windows.h>
 #include <filesystem>
@@ -16,6 +17,7 @@ TASMod::TASMod() {
     recorder = std::make_unique<InputRecorder>();
     replayer = std::make_unique<InputReplayer>();
     memory = std::make_unique<MemoryManager>();
+    virtualController = std::make_unique<VirtualController>();
 }
 
 TASMod::~TASMod() {
@@ -29,6 +31,11 @@ bool TASMod::Initialize() {
     if (!memory->Initialize()) {
         return false;
     }
+    
+    // Initialize virtual controller (for input replay)
+    virtualController->Initialize();
+    // Note: We don't fail if virtual controller init fails,
+    // it will just show a warning message to the user
     
     // Create TAS directory if it doesn't exist
     fs::create_directories("TAS");
@@ -67,8 +74,14 @@ void TASMod::OnFrame() {
         
         auto frame = replayer->GetCurrentFrame();
         if (frame) {
-            // Apply inputs to the game
-            memory->ApplyInputs(*frame);
+            // Apply inputs to the game via virtual controller (preferred)
+            if (virtualController && virtualController->IsInitialized()) {
+                virtualController->ApplyInputs(*frame);
+            }
+            // Fallback to memory-based input (won't work well but better than nothing)
+            else if (memory) {
+                memory->ApplyInputs(*frame);
+            }
             
             // Check for break inputs (user taking over)
             if (CheckBreakInputs(*frame)) {

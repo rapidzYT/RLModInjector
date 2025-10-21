@@ -40,6 +40,7 @@ namespace RLTASMod {
 class InputRecorder;
 class InputReplayer;
 class MemoryManager;
+class VirtualController;
 struct TASData;
 
 // Input state structure
@@ -124,6 +125,7 @@ private:
     std::unique_ptr<InputRecorder> recorder;
     std::unique_ptr<InputReplayer> replayer;
     std::unique_ptr<MemoryManager> memory;
+    std::unique_ptr<VirtualController> virtualController;
     
     GameState initialState;
     float recordingStartTime = 0.0f;
