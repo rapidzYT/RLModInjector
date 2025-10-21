@@ -124,6 +124,9 @@ void TASMod::RenderControlsTab() {
         if (strlen(tasName) > 0) {
             NewTAS(tasName);
             memset(tasName, 0, sizeof(tasName));
+            ImGui::Text("TAS Created! Click Start to begin recording.");
+        } else {
+            ImGui::Text("Please enter a TAS name first!");
         }
     }
     
@@ -151,12 +154,22 @@ void TASMod::RenderControlsTab() {
     ImGui::Text("Record Speed:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
-    ImGui::SliderFloat("##RecordSpeed", &settings.recordSpeed, 0.1f, 10.0f, "%.2fx");
+    if (ImGui::SliderFloat("##RecordSpeed", &settings.recordSpeed, 0.1f, 10.0f, "%.2fx")) {
+        // Speed changed - update recorder if recording
+        if (currentState == STATE_RECORDING && recorder) {
+            // Speed will be used on next frame
+        }
+    }
     
     ImGui::Text("Replay Speed:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
-    ImGui::SliderFloat("##ReplaySpeed", &settings.replaySpeed, 0.1f, 10.0f, "%.2fx");
+    if (ImGui::SliderFloat("##ReplaySpeed", &settings.replaySpeed, 0.1f, 10.0f, "%.2fx")) {
+        // Speed changed - update replayer if replaying
+        if (currentState == STATE_REPLAYING && replayer) {
+            // Speed will be used on next frame
+        }
+    }
     
     ImGui::Spacing();
     ImGui::Separator();
@@ -330,8 +343,15 @@ void TASMod::NewTAS(const std::string& name) {
 }
 
 void TASMod::StartRecording() {
-    if (currentState != STATE_IDLE) return;
-    if (!currentTAS) return;
+    if (currentState != STATE_IDLE) {
+        // Already recording or replaying
+        return;
+    }
+    
+    // If no TAS exists, create a default one
+    if (!currentTAS) {
+        NewTAS("default_tas");
+    }
     
     currentState = STATE_RECORDING;
     recordingStartTime = GetCurrentTime();
@@ -347,7 +367,12 @@ void TASMod::StopRecording() {
 
 void TASMod::StartReplaying() {
     if (currentState != STATE_IDLE) return;
-    if (!currentTAS || currentTAS->GetFrameCount() == 0) return;
+    
+    // If no TAS or no frames, start recording instead
+    if (!currentTAS || currentTAS->GetFrameCount() == 0) {
+        StartRecording();
+        return;
+    }
     
     // Restore initial state
     RestoreInitialState();
