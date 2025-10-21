@@ -80,14 +80,12 @@ bool MemoryManager::SetGameState(const GameState& state) {
 
 bool MemoryManager::ApplyInputs(const InputFrame& frame) {
     // Simulate keyboard inputs using Windows API
-    const int KEYEVENTF_KEYUP = 0x0002;
-    
     // Helper to press or release a key
     auto SetKeyState = [](int vk, bool pressed) {
         if (pressed) {
             keybd_event(vk, 0, 0, 0);  // Key down
         } else {
-            keybd_event(vk, 0, KEYEVENTF_KEYUP, 0);  // Key up
+            keybd_event(vk, 0, 0x0002, 0);  // Key up (KEYEVENTF_KEYUP = 0x0002)
         }
     };
     
