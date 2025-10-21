@@ -79,7 +79,88 @@ bool MemoryManager::SetGameState(const GameState& state) {
 }
 
 bool MemoryManager::ApplyInputs(const InputFrame& frame) {
-    // Simulate keyboard inputs using Windows API
+    // ========================================
+    // METHOD 1: Direct Memory Write (MOST ACCURATE!)
+    // Uses addresses found with Cheat Engine
+    // ========================================
+    
+    if (INPUT_BASE_OFFSET != 0) {
+        // Use direct memory writes (fill in offsets from Cheat Engine!)
+        uintptr_t inputBase = baseAddress + INPUT_BASE_OFFSET;
+        
+        // Write throttle (W key) - float 0.0 or 1.0
+        if (INPUT_THROTTLE_OFFSET != 0) {
+            float throttle = frame.throttle ? 1.0f : 0.0f;
+            WriteMemory(inputBase + INPUT_THROTTLE_OFFSET, &throttle, sizeof(float));
+        }
+        
+        // Write brake (S key) - float 0.0 or 1.0
+        if (INPUT_BRAKE_OFFSET != 0) {
+            float brake = frame.brake ? 1.0f : 0.0f;
+            WriteMemory(inputBase + INPUT_BRAKE_OFFSET, &brake, sizeof(float));
+        }
+        
+        // Write steering (A/D keys) - float -1.0 to 1.0
+        if (INPUT_STEER_OFFSET != 0) {
+            float steer = 0.0f;
+            if (frame.steerLeft) steer = -1.0f;
+            if (frame.steerRight) steer = 1.0f;
+            WriteMemory(inputBase + INPUT_STEER_OFFSET, &steer, sizeof(float));
+        }
+        
+        // Write jump (Space) - byte 0 or 1
+        if (INPUT_JUMP_OFFSET != 0) {
+            byte jump = frame.jump ? 1 : 0;
+            WriteMemory(inputBase + INPUT_JUMP_OFFSET, &jump, sizeof(byte));
+        }
+        
+        // Write boost (Shift) - byte 0 or 1
+        if (INPUT_BOOST_OFFSET != 0) {
+            byte boost = frame.boost ? 1 : 0;
+            WriteMemory(inputBase + INPUT_BOOST_OFFSET, &boost, sizeof(byte));
+        }
+        
+        // Write powerslide (Ctrl) - byte 0 or 1
+        if (INPUT_POWERSLIDE_OFFSET != 0) {
+            byte powerslide = frame.powerslide ? 1 : 0;
+            WriteMemory(inputBase + INPUT_POWERSLIDE_OFFSET, &powerslide, sizeof(byte));
+        }
+        
+        // Write air roll left (Q) - byte 0 or 1
+        if (INPUT_AIR_ROLL_LEFT_OFFSET != 0) {
+            byte airRollLeft = frame.airRollLeft ? 1 : 0;
+            WriteMemory(inputBase + INPUT_AIR_ROLL_LEFT_OFFSET, &airRollLeft, sizeof(byte));
+        }
+        
+        // Write air roll right (E) - byte 0 or 1
+        if (INPUT_AIR_ROLL_RIGHT_OFFSET != 0) {
+            byte airRollRight = frame.airRollRight ? 1 : 0;
+            WriteMemory(inputBase + INPUT_AIR_ROLL_RIGHT_OFFSET, &airRollRight, sizeof(byte));
+        }
+        
+        // Write pitch (Up/Down arrows) - float -1.0 to 1.0
+        if (INPUT_PITCH_OFFSET != 0) {
+            WriteMemory(inputBase + INPUT_PITCH_OFFSET, &frame.pitch, sizeof(float));
+        }
+        
+        // Write yaw (Left/Right arrows) - float -1.0 to 1.0
+        if (INPUT_YAW_OFFSET != 0) {
+            WriteMemory(inputBase + INPUT_YAW_OFFSET, &frame.yaw, sizeof(float));
+        }
+        
+        // Write roll - float -1.0 to 1.0
+        if (INPUT_ROLL_OFFSET != 0) {
+            WriteMemory(inputBase + INPUT_ROLL_OFFSET, &frame.roll, sizeof(float));
+        }
+        
+        return true;
+    }
+    
+    // ========================================
+    // METHOD 2: Fallback - Windows Input Simulation
+    // (Doesn't work well but kept for testing)
+    // ========================================
+    
     // Helper to press or release a key
     auto SetKeyState = [](int vk, bool pressed) {
         if (pressed) {
@@ -89,7 +170,7 @@ bool MemoryManager::ApplyInputs(const InputFrame& frame) {
         }
     };
     
-    // Apply all inputs
+    // Apply all inputs (fallback method - won't work well in RL!)
     SetKeyState('W', frame.throttle);
     SetKeyState('S', frame.brake);
     SetKeyState('A', frame.steerLeft);
